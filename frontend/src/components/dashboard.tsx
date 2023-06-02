@@ -1,11 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import {
-  Input,
-  Button,
-  Paper,
-  Text
-} from '@mantine/core';
+import { Input, Button, Paper, Text } from '@mantine/core';
 
 const Dashboard = () => {
   const [gbpUsdRate, setGbpUsdRate] = useState<number | null>(null);
@@ -49,39 +44,39 @@ const Dashboard = () => {
 
     const ws = new WebSocket('ws://localhost:5000');
 
-      ws.onopen = () => {
-        console.log('WebSocket connection established.');
-      };
+    ws.onopen = () => {
+      console.log('WebSocket connection established.');
+    };
 
-      ws.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-  
-        if (data.type === 'trade') {
-          const { s, p } = data.data[0];
-  
-          if (s === 'OANDA:GBP_USD') {
-            const rate = 1 / p;
-            setGbpUsdRate(Number(rate.toFixed(6)));
-            if (usdGbpRate === null) {
-              setUsdGbpRate(Number((1 / rate).toFixed(6)));
-            }
-          } else {
-            const rate = p;
-            setUsdGbpRate(Number(rate.toFixed(6)));
-            if (gbpUsdRate === null) {
-              setGbpUsdRate(Number((1 / rate).toFixed(6)));
-            }
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+
+      if (data.type === 'trade') {
+        const { s, p } = data.data[0];
+
+        if (s === 'OANDA:GBP_USD') {
+          const rate = 1 / p;
+          setGbpUsdRate(Number(rate.toFixed(6)));
+          if (usdGbpRate === null) {
+            setUsdGbpRate(Number((1 / rate).toFixed(6)));
+          }
+        } else {
+          const rate = p;
+          setUsdGbpRate(Number(rate.toFixed(6)));
+          if (gbpUsdRate === null) {
+            setGbpUsdRate(Number((1 / rate).toFixed(6)));
           }
         }
-      };
-      
-      ws.onclose = () => {
-        console.log('WebSocket connection closed.');
-      };
+      }
+    };
 
-      return () => {
-        ws.close();
-      };
+    ws.onclose = () => {
+      console.log('WebSocket connection closed.');
+    };
+
+    return () => {
+      ws.close();
+    };
   }, []);
 
   const handleConfirmClick = async (
@@ -89,15 +84,15 @@ const Dashboard = () => {
     isBuy: boolean,
     rate: number | null,
     currencyPair: string
-    ) => {
+  ) => {
     if (rate === null || volume === null) {
       return;
     }
-  
+
     const tradeValue = isBuy ? volume * rate : volume / rate;
     const tradeType = isBuy ? 'buy' : 'sell';
     const tradeTimestamp = new Date().toISOString();
-  
+
     try {
       const balanceResponse = await fetch(`http://localhost:8080/api/users/${localStorage.getItem('token')}`, {
         method: 'GET',
@@ -106,18 +101,18 @@ const Dashboard = () => {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
       });
-  
+
       if (!balanceResponse.ok) {
         throw new Error(`Failed to fetch user balances: ${balanceResponse.status} ${balanceResponse.statusText}`);
       }
-  
+
       const userData = await balanceResponse.json();
       const usdBalance = userData.data.balances[0].amount;
       const gbpBalance = userData.data.balances[1].amount;
-  
+
       if (currencyPair === 'GBP/USD') {
         const tradeNotionalValue = Math.abs(tradeValue * rate);
-  
+
         if (isBuy && gbpBalance < tradeNotionalValue) {
           console.log('Insufficient funds in GBP balance');
           return;
@@ -126,12 +121,12 @@ const Dashboard = () => {
           console.log('Insufficient funds in USD balance');
           return;
         }
-  
+
         fetchBalances();
-  
+
         const newUsdBalance = isBuy ? usdBalance + tradeValue : usdBalance - tradeValue;
         const newGbpBalance = isBuy ? gbpBalance - tradeNotionalValue : gbpBalance + tradeNotionalValue;
-  
+
         const updateResponse = await fetch(`http://localhost:8080/api/users/${localStorage.getItem('token')}/balance`, {
           method: 'PUT',
           headers: {
@@ -145,11 +140,11 @@ const Dashboard = () => {
             ]
           }),
         });
-  
+
         if (updateResponse.ok) {
           await fetchBalances();
           console.log(`User's balances updated successfully.`);
-  
+
           const createTradeResponse = await fetch('http://localhost:8080/api/trades', {
             method: 'POST',
             headers: {
@@ -166,7 +161,7 @@ const Dashboard = () => {
               timestamp: tradeTimestamp,
             }),
           });
-  
+
           if (createTradeResponse.ok) {
             console.log('Trade created successfully.');
           } else {
@@ -177,7 +172,7 @@ const Dashboard = () => {
         }
       } else if (currencyPair === 'USD/GBP') {
         const tradeNotionalValue = Math.abs(volume * rate);
-  
+
         if (isBuy && usdBalance < tradeNotionalValue) {
           console.log('Insufficient funds in USD balance');
           return;
@@ -185,13 +180,13 @@ const Dashboard = () => {
         if (!isBuy && gbpBalance < tradeNotionalValue) {
           console.log('Insufficient funds in GBP balance');
           return;
-        }    
-  
+        }
+
         fetchBalances();
-  
+
         const newUsdBalance = isBuy ? usdBalance - tradeNotionalValue : usdBalance + tradeNotionalValue;
         const newGbpBalance = isBuy ? gbpBalance + volume : gbpBalance - volume;
-  
+
         const updateResponse = await fetch(`http://localhost:8080/api/users/${localStorage.getItem('userId')}/balance`, {
           method: 'PUT',
           headers: {
@@ -205,11 +200,11 @@ const Dashboard = () => {
             ],
           }),
         });
-  
+
         if (updateResponse.ok) {
           await fetchBalances();
           console.log(`User's balances updated successfully.`);
-  
+
           const createTradeResponse = await fetch('http://localhost:8080/api/trades', {
             method: 'POST',
             headers: {
@@ -226,7 +221,7 @@ const Dashboard = () => {
               timestamp: tradeTimestamp,
             }),
           });
-  
+
           if (createTradeResponse.ok) {
             console.log('Trade created successfully.');
           } else {

@@ -13,11 +13,11 @@ interface Trade {
   timestamp: string;
 }
 
-const Trades = () => {
+const Trades = (): JSX.Element => {
   const [trades, setTrades] = useState<Trade[]>([]);
 
   useEffect(() => {
-    const fetchTrades = async () => {
+    const fetchTrades = async (): Promise<void> => {
       try {
         const response = await fetch(`http://localhost:8080/api/trades/${localStorage.getItem('token')}`, {
           method: 'GET',
@@ -57,19 +57,19 @@ const Trades = () => {
           </tr>
         </thead>
         <tbody>
-        {trades
-          .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-          .map((trade) => (
-            <tr key={trade.id}>
-              <td>{format(new Date(trade.timestamp), 'MM/dd/yyyy HH:mm:ss')}</td>
-              <td>{trade.currencyPair}</td>
-              <td>{trade.volume}</td>
-              <td>{trade.type}</td>
-              <td>{trade.price}</td>
-              <td>{trade.value}</td>
-            </tr>
-          ))}
-      </tbody>
+          {trades
+            .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+            .map((trade) => (
+              <tr key={trade.id}>
+                <td>{format(new Date(trade.timestamp), 'MM/dd/yyyy HH:mm:ss')}</td>
+                <td>{trade.currencyPair}</td>
+                <td>{trade.volume}</td>
+                <td>{trade.type}</td>
+                <td>{trade.price}</td>
+                <td>{trade.value}</td>
+              </tr>
+            ))}
+        </tbody>
       </Table>
     </div>
   );

@@ -1,5 +1,5 @@
 import React from 'react';
-import ReactDOM from 'react-dom/client';
+import { render } from 'react-dom';
 import RegisterView from './components/register';
 import LoginView from './components/login';
 import Trades from './components/trades';
@@ -12,10 +12,9 @@ function RootRedirect() {
   return <Navigate to={isLoggedIn ? '/dashboard' : '/login'} />;
 }
 
-const root = ReactDOM.createRoot(
-  document.getElementById('root') as HTMLElement
-);
-root.render(
+const rootElement = document.getElementById('root');
+
+render(
   <React.StrictMode>
     <BrowserRouter>
       <Routes>
@@ -26,5 +25,6 @@ root.render(
         <Route path="/dashboard" element={<Dashboard />} />
       </Routes>
     </BrowserRouter>
-  </React.StrictMode>
+  </React.StrictMode>,
+  rootElement
 );

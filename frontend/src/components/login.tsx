@@ -1,11 +1,8 @@
-import React from 'react';
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Container, Center, Text, TextInput, Button } from '@mantine/core';
 
 function Login() {
-  localStorage.removeItem('token');
-  localStorage.removeItem('userId');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
@@ -60,7 +57,7 @@ function Login() {
           </div>
           <Button type="submit">Log in</Button>
           <div style={{ marginTop: '1rem' }}>
-            <Link to="/register">Don't have an account yet? register</Link>
+            <Link to="/register">Don't have an account yet? Register</Link>
           </div>
         </form>
       </Center>
