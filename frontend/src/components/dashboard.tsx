@@ -111,13 +111,14 @@ const Dashboard = () => {
       const gbpBalance = userData.data.balances[1].amount;
 
       if (currencyPair === 'GBP/USD') {
-        const tradeNotionalValue = Math.abs(tradeValue * rate);
-
+        const tradeNotionalValue = isBuy ? Math.abs(tradeValue * rate) : Math.abs(volume);
+        const tradeValueInGBP = isBuy ? tradeNotionalValue : tradeNotionalValue / rate;
+      
         if (isBuy && gbpBalance < tradeNotionalValue) {
           console.log('Insufficient funds in GBP balance');
           return;
         }
-        if (!isBuy && usdBalance < tradeNotionalValue) {
+        if (!isBuy && usdBalance < tradeValueInGBP) {
           console.log('Insufficient funds in USD balance');
           return;
         }
@@ -171,13 +172,14 @@ const Dashboard = () => {
           throw new Error(`Failed to update user's balances: ${updateResponse.status} ${updateResponse.statusText}`);
         }
       } else if (currencyPair === 'USD/GBP') {
-        const tradeNotionalValue = Math.abs(volume * rate);
-
+        const tradeNotionalValue = isBuy ? Math.abs(volume) : Math.abs(volume * rate);
+        const tradeValueInUSD = isBuy ? tradeNotionalValue * rate : tradeNotionalValue / rate;
+      
         if (isBuy && usdBalance < tradeNotionalValue) {
           console.log('Insufficient funds in USD balance');
           return;
         }
-        if (!isBuy && gbpBalance < tradeNotionalValue) {
+        if (!isBuy && gbpBalance < tradeValueInUSD) {
           console.log('Insufficient funds in GBP balance');
           return;
         }
