@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { User, UserInput, findUserByEmail } from './model';
 import jwt from 'jsonwebtoken';
+import mongoose, { ObjectId } from 'mongoose';
 
 const createUser = async (req: Request, res: Response): Promise<Response> => {
   const { email, name, password } = req.body;
@@ -31,8 +32,10 @@ const getAllUsers = async (req: Request, res: Response): Promise<Response> => {
 const getUser = async (req: Request, res: Response): Promise<Response> => {
   const token = req.headers.authorization?.split(' ')[1] ?? '';
   try {
-    const decodedToken: any = jwt.verify(token, '2b$10$wJrCNThgqusTvJSeiv6EVuia/wbWg/');
+    const decodedToken: any = jwt.verify(token, 'peido');
     const id = decodedToken.userId;
+
+    console.log(id)
 
     const user = await User.findById(id).lean().exec();
 
@@ -100,7 +103,7 @@ const checkUserPassword = async (
     return res.status(401).json({ message: 'Invalid password.' });
   }
 
-  const token = jwt.sign({ userId: user._id }, '2b$10$wJrCNThgqusTvJSeiv6EVuia/wbWg/');
+  const token = jwt.sign({ userId: user._id }, 'peido');
 
   console.log(token)
 
@@ -111,7 +114,10 @@ const updateUserBalance = async (req: Request, res: Response) => {
   const token = req.headers.authorization?.split(' ')[1] ?? '';
 
   try {
-    const decodedToken: any = jwt.verify(token, '2b$10$wJrCNThgqusTvJSeiv6EVuia/wbWg/');
+    const decodedToken: any = jwt.verify(token, 'peido');
+
+    console.log("decoded token : "+decodedToken)
+    console.log("not decoded token : "+token)
 
     const userId = decodedToken.userId;
 

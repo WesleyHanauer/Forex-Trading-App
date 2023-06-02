@@ -89,7 +89,7 @@ const Dashboard = () => {
     isBuy: boolean,
     rate: number | null,
     currencyPair: string
-    ) => {
+  ) => {
     if (rate === null || volume === null) {
       return;
     }
@@ -99,142 +99,114 @@ const Dashboard = () => {
     const tradeTimestamp = new Date().toISOString();
   
     try {
-      const balanceResponse = await fetch(`http://localhost:8080/api/users/${localStorage.getItem('token')}`, {
-        method: 'GET',
+      const response = await fetch('http://localhost:8080/api/trades', {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
+        body: JSON.stringify({
+          userId: localStorage.getItem('userId'),
+          currencyPair,
+          volume,
+          price: rate,
+          value: tradeValue,
+          type: tradeType,
+          timestamp: tradeTimestamp,
+        }),
       });
   
-      if (!balanceResponse.ok) {
-        throw new Error(`Failed to fetch user balances: ${balanceResponse.status} ${balanceResponse.statusText}`);
-      }
+      if (response.ok) {
+        console.log('Trade created successfully.');
   
-      const userData = await balanceResponse.json();
-      const usdBalance = userData.data.balances[0].amount;
-      const gbpBalance = userData.data.balances[1].amount;
+        const balanceResponse = await fetch(`http://localhost:8080/api/users/${localStorage.getItem('token')}`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${localStorage.getItem('token')}`,
+            },
+          });
+
+        const userData = await balanceResponse.json();
+        const usdBalance = userData.data.balances[0].amount;
+        const gbpBalance = userData.data.balances[1].amount;        
+
+        if (currencyPair === 'GBP/USD') {
+          const tradeNotionalValue = Math.abs(tradeValue * rate);
   
-      if (currencyPair === 'GBP/USD') {
-        const tradeNotionalValue = Math.abs(tradeValue * rate);
+          if (isBuy && gbpBalance < tradeNotionalValue) {
+            console.log('Insufficient funds in GBP balance');
+            return;
+          }
+          if (!isBuy && gbpBalance < volume) {
+            console.log('Insufficient funds in GBP balance');
+            return;
+          }
+          fetchBalances();
+          
   
-        if (isBuy && gbpBalance < tradeNotionalValue) {
-          console.log('Insufficient funds in GBP balance');
-          return;
-        }
-        if (!isBuy && usdBalance < tradeNotionalValue) {
-          console.log('Insufficient funds in USD balance');
-          return;
-        }
+          const newUsdBalance = isBuy ? usdBalance + tradeValue : usdBalance - tradeValue;
+          const newGbpBalance = isBuy ? gbpBalance - tradeNotionalValue : gbpBalance + tradeNotionalValue;
   
-        fetchBalances();
-  
-        const newUsdBalance = isBuy ? usdBalance + tradeValue : usdBalance - tradeValue;
-        const newGbpBalance = isBuy ? gbpBalance - tradeNotionalValue : gbpBalance + tradeNotionalValue;
-  
-        const updateResponse = await fetch(`http://localhost:8080/api/users/${localStorage.getItem('token')}/balance`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          },
-          body: JSON.stringify({
-            balances: [
-              { currency: 'USD', amount: newUsdBalance },
-              { currency: 'GBP', amount: newGbpBalance }
-            ]
-          }),
-        });
-  
-        if (updateResponse.ok) {
-          await fetchBalances();
-          console.log(`User's balances updated successfully.`);
-  
-          const createTradeResponse = await fetch('http://localhost:8080/api/trades', {
-            method: 'POST',
+          const updateResponse = await fetch(`http://localhost:8080/api/users/${localStorage.getItem('token')}/balance`, {
+            method: 'PUT',
             headers: {
               'Content-Type': 'application/json',
               Authorization: `Bearer ${localStorage.getItem('token')}`,
             },
             body: JSON.stringify({
-              userId: localStorage.getItem('userId'),
-              currencyPair,
-              volume,
-              price: rate,
-              value: tradeValue,
-              type: tradeType,
-              timestamp: tradeTimestamp,
+              balances: [
+                { currency: 'USD', amount: newUsdBalance },
+                { currency: 'GBP', amount: newGbpBalance }
+              ]
             }),
           });
   
-          if (createTradeResponse.ok) {
-            console.log('Trade created successfully.');
+          if (updateResponse.ok) {
+            await fetchBalances();
+            console.log(`User's balances updated successfully.`);
           } else {
-            throw new Error(`Failed to create trade: ${createTradeResponse.status} ${createTradeResponse.statusText}`);
+            throw new Error(`Failed to update user's balances: ${updateResponse.status} ${updateResponse.statusText}`);
           }
-        } else {
-          throw new Error(`Failed to update user's balances: ${updateResponse.status} ${updateResponse.statusText}`);
-        }
-      } else if (currencyPair === 'USD/GBP') {
-        const tradeNotionalValue = Math.abs(volume * rate);
+        } else if (currencyPair === 'USD/GBP') {
+          const tradeNotionalValue = Math.abs(volume * rate);
   
-        if (isBuy && usdBalance < tradeNotionalValue) {
-          console.log('Insufficient funds in USD balance');
-          return;
-        }
-        if (!isBuy && gbpBalance < tradeNotionalValue) {
-          console.log('Insufficient funds in GBP balance');
-          return;
-        }    
+          if (isBuy && usdBalance < tradeNotionalValue) {
+            console.log('Insufficient funds in USD balance');
+            return;
+          }
+          if (!isBuy && usdBalance < tradeNotionalValue) {
+            console.log('Insufficient funds in USD balance');
+            return;
+          }
+          fetchBalances();
+
+          const newUsdBalance = isBuy ? usdBalance - tradeNotionalValue : usdBalance + tradeNotionalValue;
+          const newGbpBalance = isBuy ? gbpBalance + volume : gbpBalance - volume;
   
-        fetchBalances();
-  
-        const newUsdBalance = isBuy ? usdBalance - tradeNotionalValue : usdBalance + tradeNotionalValue;
-        const newGbpBalance = isBuy ? gbpBalance + volume : gbpBalance - volume;
-  
-        const updateResponse = await fetch(`http://localhost:8080/api/users/${localStorage.getItem('userId')}/balance`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          },
-          body: JSON.stringify({
-            balances: [
-              { currency: 'USD', amount: newUsdBalance },
-              { currency: 'GBP', amount: newGbpBalance },
-            ],
-          }),
-        });
-  
-        if (updateResponse.ok) {
-          await fetchBalances();
-          console.log(`User's balances updated successfully.`);
-  
-          const createTradeResponse = await fetch('http://localhost:8080/api/trades', {
-            method: 'POST',
+          const updateResponse = await fetch(`http://localhost:8080/api/users/${localStorage.getItem('userId')}/balance`, {
+            method: 'PUT',
             headers: {
               'Content-Type': 'application/json',
               Authorization: `Bearer ${localStorage.getItem('token')}`,
             },
             body: JSON.stringify({
-              userId: localStorage.getItem('userId'),
-              currencyPair,
-              volume,
-              price: rate,
-              value: tradeValue,
-              type: tradeType,
-              timestamp: tradeTimestamp,
+              balances: [
+                { currency: 'USD', amount: newUsdBalance },
+                { currency: 'GBP', amount: newGbpBalance },          
+              ],
             }),
           });
   
-          if (createTradeResponse.ok) {
-            console.log('Trade created successfully.');
+          if (updateResponse.ok) {
+            await fetchBalances();
+            console.log(`User's balances updated successfully.`);
           } else {
-            throw new Error(`Failed to create trade: ${createTradeResponse.status} ${createTradeResponse.statusText}`);
+            throw new Error(`Failed to update user's balances: ${updateResponse.status} ${updateResponse.statusText}`);
           }
-        } else {
-          throw new Error(`Failed to update user's balances: ${updateResponse.status} ${updateResponse.statusText}`);
         }
+      } else {
+        throw new Error(`Failed to create trade: ${response.status} ${response.statusText}`);
       }
     } catch (error) {
       console.error(`An error occurred while creating or updating trade: ${error}`);

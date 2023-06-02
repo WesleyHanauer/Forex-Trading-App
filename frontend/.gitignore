@@ -1,9 +1,9 @@
 
 /node_modules
 
-/src/tests
-
 /coverage
+
+/src/tests
 
 .env.local
 .env.development.local
