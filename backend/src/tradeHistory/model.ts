@@ -1,5 +1,4 @@
-import mongoose from 'mongoose';
-import { ObjectId } from 'mongodb';
+import mongoose, { ObjectId } from 'mongoose';
 
 export interface Trade {
   userId: ObjectId;
@@ -11,14 +10,17 @@ export interface Trade {
   timestamp: string;
 }
 
-const tradeSchema = new mongoose.Schema({
-  userId: mongoose.Types.ObjectId,
-  currencyPair: String,
-  volume: Number,
-  type: String,
-  price: Number,
-  value: Number,
-  timestamp: String,
-}, { collection: 'tradeHistory' });
+const tradeSchema = new mongoose.Schema(
+  {
+    userId: mongoose.Types.ObjectId,
+    currencyPair: String,
+    volume: Number,
+    type: String,
+    price: Number,
+    value: Number,
+    timestamp: String,
+  },
+  { collection: 'tradeHistory' }
+);
 
 export const Trade = mongoose.model<Trade>('Trade', tradeSchema);

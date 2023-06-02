@@ -7,7 +7,10 @@ const createTrade = async (req: Request, res: Response) => {
   try {
     const { currencyPair, volume, type, price, value, timestamp } = req.body;
     const token = req.headers.authorization?.split(' ')[1] ?? '';
-    const decodedToken: any = jwt.verify(token, '2b$10$wJrCNThgqusTvJSeiv6EVuia/wbWg/');
+    const decodedToken: any = jwt.verify(
+      token,
+      '2b$10$wJrCNThgqusTvJSeiv6EVuia/wbWg/'
+    );
     const userId = mongoose.Types.ObjectId.createFromHexString(decodedToken.userId);
 
     const trade = new Trade({
@@ -41,7 +44,10 @@ const getTrades = async (req: Request, res: Response) => {
 const getTrade = async (req: Request, res: Response) => {
   const token = req.headers.authorization?.split(' ')[1] ?? '';
   try {
-    const decodedToken: any = jwt.verify(token, '2b$10$wJrCNThgqusTvJSeiv6EVuia/wbWg/');
+    const decodedToken: any = jwt.verify(
+      token,
+      '2b$10$wJrCNThgqusTvJSeiv6EVuia/wbWg/'
+    );
     const userId = decodedToken.userId;
     const trades = await Trade.find({ userId });
     res.json(trades);
@@ -51,8 +57,4 @@ const getTrade = async (req: Request, res: Response) => {
   }
 };
 
-export {
-  createTrade,
-  getTrades,
-  getTrade,
-};
+export { createTrade, getTrades, getTrade };

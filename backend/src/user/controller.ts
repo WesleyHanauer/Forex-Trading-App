@@ -89,7 +89,6 @@ const checkUserPassword = async (
 
   const user = await findUserByEmail(email);
 
-
   if (!user) {
     return res.status(404).json({ message: `User with email "${email}" not found.` });
   }
@@ -102,12 +101,12 @@ const checkUserPassword = async (
 
   const token = jwt.sign({ userId: user._id }, '2b$10$wJrCNThgqusTvJSeiv6EVuia/wbWg/');
 
-  console.log(token)
+  console.log(token);
 
   return res.status(200).json({ message: 'Login successful.', token });
 };
 
-const updateUserBalance = async (req: Request, res: Response) => {
+const updateUserBalance = async (req: Request, res: Response): Promise<Response> => {
   const token = req.headers.authorization?.split(' ')[1] ?? '';
 
   try {
@@ -117,7 +116,7 @@ const updateUserBalance = async (req: Request, res: Response) => {
 
     const { balances } = req.body;
 
-    console.log(balances)
+    console.log(balances);
 
     const user = await User.findByIdAndUpdate(
       userId,
