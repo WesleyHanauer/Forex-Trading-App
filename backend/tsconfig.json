@@ -3,6 +3,6 @@
       "target": "es6",
       "module": "commonjs",
       "esModuleInterop": true,
-      "types": ["node", "jest", "ts-node"]
+      "types": ["node", "ts-node"]
     }
   }
